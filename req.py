@@ -57,9 +57,7 @@ class EschoolConnectionHandler:
     def get_user_grade(self):
         p = self.s.get("https://app.eschool.center/ec-server/usr/groupByUser?userId=" + self.get_user_id())
         grade = get_field_val(p.text, "groupName").split(sep="-")[0]
-        if grade == '10':
-            grade = '11'
-        elif grade != '11':
+        if grade != '11' and grade != '10':
             grade = '5-9'
         return grade + " кл"
 
