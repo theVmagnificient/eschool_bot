@@ -71,7 +71,6 @@ a.login(log, pas)
 print(a.get_user_id())
 
 print(a.get_avg_mark())
-
 print(a.get_user_grade())
 
 DBInstance.init()
