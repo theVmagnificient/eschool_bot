@@ -3,10 +3,6 @@ import hashlib
 from db import *
 
 
-
-
-
-
 def get_field_val(text, field, anchor = 0, mode="", endsym = ","):
     if mode == "":
         ind = text.find(field, anchor)
@@ -48,7 +44,7 @@ class EschoolConnectionHandler:
 
     def get_per_id(self, per_name = "1 полугодие"):
         p = self.s.get("https://app.eschool.center/ec-server/dict/periods2?year=2017")
-        anc = p.text.find(per_name, p.text.find("11 кл"))
+        anc = p.text.find(per_name, p.text.find(self.get_user_grade()))
         id = get_field_val(p.text, "id", anchor=anc, mode="r")
         return id
 
@@ -57,6 +53,15 @@ class EschoolConnectionHandler:
                            self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
         anc = p.text.find(subj_name)
         return get_field_val(p.text, "overMark", anc)
+
+    def get_user_grade(self):
+        p = self.s.get("https://app.eschool.center/ec-server/usr/groupByUser?userId=" + self.get_user_id())
+        grade = get_field_val(p.text, "groupName").split(sep="-")[0]
+        if grade == '10':
+            grade = '11'
+        elif grade != '11':
+            grade = '5-9'
+        return grade + " кл"
 
 
 a = EschoolConnectionHandler()
@@ -68,6 +73,8 @@ a.login(log, pas)
 print(a.get_user_id())
 
 print(a.get_avg_mark())
+
+print(a.get_user_grade())
 
 DBInstance.init()
 
