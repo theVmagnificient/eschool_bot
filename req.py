@@ -1,5 +1,7 @@
 import requests
 import hashlib
+import re
+import datetime
 from db import *
 
 
@@ -7,7 +9,7 @@ def get_field_val(text, field, anchor = 0, mode="", endsym = ","):
     if mode == "":
         ind = text.find(field, anchor)
         tmp = text.find(":", ind)
-        return ''.join([x for x in text[tmp + 1 : text.find(endsym, ind)] if (x != "\"" and x != "\'")])
+        return ''.join([x for x in text[tmp + 1: text.find(endsym, ind)] if (x != "\"" and x != "\'")])
     # if anchor is the right bound
     elif mode == "r":
         ind = text.rfind(field, 0, anchor)
@@ -42,7 +44,7 @@ class EschoolConnectionHandler:
         self._userID = get_field_val(p.text, "userId")
         return self._userID
 
-    def get_per_id(self, per_name = "1 полугодие"):
+    def get_per_id(self, per_name="1 полугодие"):
         p = self.s.get("https://app.eschool.center/ec-server/dict/periods2?year=2017")
         anc = p.text.find(per_name, p.text.find(self.get_user_grade()))
         id = get_field_val(p.text, "id", anchor=anc, mode="r")
@@ -61,6 +63,25 @@ class EschoolConnectionHandler:
             grade = '5-9'
         return grade + " кл"
 
+    def get_new_marks(self, per_name="1 полугодие"):
+        p = self.s.get("https://app.eschool.center/ec-server/student/getDiaryPeriod/?userId=" +
+                       self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
+        now = datetime.datetime.now()
+        year = 2017
+        day = 15
+        month = 9
+        s = "markDate\":" + "\"" + str(datetime.date(year, month, day))
+        
+        for i in [m.start() for m in re.finditer(s, p.text)]:
+            print("Mark:" + get_field_val(p.text, "markVal", i, "r"))
+            print("Name: " + get_field_val(p.text, "lptName", i))
+            print("Weight: " + get_field_val(p.text, "mktWt", i))
+            print("Date: " + str(datetime.date(year, month, day)))
+            print("_________________________________")
+
+        
+        
+
 
 a = EschoolConnectionHandler()
 
@@ -72,6 +93,7 @@ print(a.get_user_id())
 
 print(a.get_avg_mark())
 print(a.get_user_grade())
+a.get_new_marks()
 
 DBInstance.init()
 
