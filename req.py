@@ -56,6 +56,13 @@ class EschoolConnectionHandler:
         anc = p.text.find(subj_name)
         return get_field_val(p.text, "overMark", anc)
 
+    def get_class_by_id(self, subj_id, per_name="1 полугодие"):
+        p = self.s.get("https://app.eschool.center/ec-server/student/getDiaryUnits/?userId=" +
+                       self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
+        anc = p.text.find("unitId\":" + str(subj_id))
+        return get_field_val(p.text, "unitName", anc, mode="r")
+        
+
     def get_user_grade(self):
         p = self.s.get("https://app.eschool.center/ec-server/usr/groupByUser?userId=" + self.get_user_id())
         grade = get_field_val(p.text, "groupName").split(sep="-")[0]
@@ -70,14 +77,22 @@ class EschoolConnectionHandler:
         year = 2017
         day = 15
         month = 9
-        s = "markDate\":" + "\"" + str(datetime.date(year, month, day))
-        
-        for i in [m.start() for m in re.finditer(s, p.text)]:
-            print("Mark:" + get_field_val(p.text, "markVal", i, "r"))
-            print("Name: " + get_field_val(p.text, "lptName", i))
-            print("Weight: " + get_field_val(p.text, "mktWt", i))
-            print("Date: " + str(datetime.date(year, month, day)))
-            print("_________________________________")
+
+        for k in range(8):
+            t = 7 - k
+            d = datetime.date(year, month, day) - datetime.timedelta(days=t)     # d = datetime.today() - timedelta(days=26)
+            s = "markDate\":" + "\"" + str(d)
+
+            for i in [m.start() for m in re.finditer(s, p.text)]:
+                left = p.text.rfind("{", 0, i)
+                right = p.text.find("}", i)
+                a = p.text[left:right]
+                print("Mark:" + get_field_val(a, "markVal", 0))
+                print("Class:" + self.get_class_by_id(get_field_val(a, "unitId", 0)))
+                print("Name: " + get_field_val(a, "lptName", 0))
+                print("Weight: " + get_field_val(a, "mktWt", 0))
+                print("Date: " + str(d))
+                print("_________________________________")
 
         
         
