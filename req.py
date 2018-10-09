@@ -45,12 +45,24 @@ class EschoolConnectionHandler:
         return self._userID
 
     def get_per_id(self, per_name="1 полугодие"):
-        p = self.s.get("https://app.eschool.center/ec-server/dict/periods2?year=2017")
+        cl = self.get_user_grade()
+        if cl == "11 кл" or cl == "10 кл":
+            if per_name.find("полугодие") > 0:
+                per_name = per_name.replace("полугодие", "семестр")
+                
+        p = self.s.get("https://app.eschool.center/ec-server/dict/periods2?year=2018")
         anc = p.text.find(per_name, p.text.find(self.get_user_grade()))
+        if anc == -1:
+            anc = p.text.rfind(per_name, p.text.find(self.get_user_grade()))
+        
         id = get_field_val(p.text, "id", anchor=anc, mode="r")
         return id
 
-    def get_avg_mark(self, subj_name="Алгебра", per_name="1 полугодие"):
+    def get_avg_mark(self, subj_name="Физика", per_name="1 полугодие"):
+        cl = self.get_user_grade()
+        if cl == "11 кл" or cl == "10 кл":
+            if per_name.find("полугодие") > 0:
+                per_name = per_name.replace("полугодие", "семестр")
         p = self.s.get("https://app.eschool.center/ec-server/student/getDiaryUnits/?userId=" +
                            self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
         anc = p.text.find(subj_name)
