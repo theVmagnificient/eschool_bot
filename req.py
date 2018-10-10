@@ -86,54 +86,27 @@ class EschoolConnectionHandler:
         p = self.s.get("https://app.eschool.center/ec-server/student/getDiaryPeriod/?userId=" +
                        self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
         now = datetime.datetime.now()
-        year = 2017
-        day = 15
-        month = 9
-
+    
         for k in range(8):
             t = 7 - k
-            d = datetime.date(year, month, day) - datetime.timedelta(days=t)     # d = datetime.today() - timedelta(days=26)
+            d = datetime.date(now.year, now.month, now.day) - datetime.timedelta(days=t)     # d = datetime.today() - timedelta(days=26)
             s = "markDate\":" + "\"" + str(d)
 
             for i in [m.start() for m in re.finditer(s, p.text)]:
                 left = p.text.rfind("{", 0, i)
                 right = p.text.find("}", i)
                 a = p.text[left:right]
-                print("Mark:" + get_field_val(a, "markVal", 0))
-                print("Class:" + self.get_class_by_id(get_field_val(a, "unitId", 0)))
-                print("Name: " + get_field_val(a, "lptName", 0))
-                print("Weight: " + get_field_val(a, "mktWt", 0))
-                print("Date: " + str(d))
-                print("_________________________________")
+
+                isUpdated = get_field_val(a, "isUpdated", 0)
+                if isUpdated == '1':
+                    print("Mark:" + get_field_val(a, "markVal", 0))
+                    print("Class:" + self.get_class_by_id(get_field_val(a, "unitId", 0)))
+                    print("Name: " + get_field_val(a, "lptName", 0))
+                    print("Weight: " + get_field_val(a, "mktWt", 0))
+                    print("Date: " + str(d))
+                    print("_________________________________")
 
         
         
 
 
-a = EschoolConnectionHandler()
-
-log = input("Log: ")
-pas = input("Pas: ")
-a.login(log, pas)
-
-print(a.get_user_id())
-
-print(a.get_avg_mark())
-print(a.get_user_grade())
-a.get_new_marks()
-
-DBInstance.init()
-
-DBInstance.push("qwerty", log, a.hash_pas, a.get_user_id())
-
-a = DBInstance.get("qwerty")
-
-DBInstance.update("qwerty", "kek")
-
-b = DBInstance.get("qwerty")
-
-DBInstance.delete("qwerty")
-
-c = DBInstance.get("qwerty")
-
-DBInstance.close()
