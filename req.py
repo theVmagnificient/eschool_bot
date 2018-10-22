@@ -27,8 +27,11 @@ class EschoolConnectionHandler:
         self.url = 'https://app.eschool.center/ec-server/login'
         self.hash_pas = None
 
-    def login(self, log, password):
-        self.hash_pas = hashlib.sha256(password.encode()).hexdigest()
+    def login(self, log, password, ishash_pas=False):
+        if ishash_pas == False:
+            self.hash_pas = hashlib.sha256(password.encode()).hexdigest()
+        else:
+            self.hash_pas = password
         p = self.s.post(self.url, data={'username': log,
                                         'password': self.hash_pas})
 
@@ -36,6 +39,7 @@ class EschoolConnectionHandler:
             return 0
         else:
             return p.status_code
+
 
     def get_user_id(self):
         if self._userID:
@@ -49,12 +53,12 @@ class EschoolConnectionHandler:
         if cl == "11 кл" or cl == "10 кл":
             if per_name.find("полугодие") > 0:
                 per_name = per_name.replace("полугодие", "семестр")
-                
+
         p = self.s.get("https://app.eschool.center/ec-server/dict/periods2?year=2018")
         anc = p.text.find(per_name, p.text.find(self.get_user_grade()))
         if anc == -1:
             anc = p.text.rfind(per_name, p.text.find(self.get_user_grade()))
-        
+
         id = get_field_val(p.text, "id", anchor=anc, mode="r")
         return id
 
@@ -73,7 +77,7 @@ class EschoolConnectionHandler:
                        self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
         anc = p.text.find("unitId\":" + str(subj_id))
         return get_field_val(p.text, "unitName", anc, mode="r")
-        
+
 
     def get_user_grade(self):
         p = self.s.get("https://app.eschool.center/ec-server/usr/groupByUser?userId=" + self.get_user_id())
@@ -86,7 +90,7 @@ class EschoolConnectionHandler:
         p = self.s.get("https://app.eschool.center/ec-server/student/getDiaryPeriod/?userId=" +
                        self.get_user_id() + "&eiId=" + self.get_per_id(per_name))
         now = datetime.datetime.now()
-    
+        list = []
         for k in range(8):
             t = 7 - k
             d = datetime.date(now.year, now.month, now.day) - datetime.timedelta(days=t)     # d = datetime.today() - timedelta(days=26)
@@ -99,14 +103,44 @@ class EschoolConnectionHandler:
 
                 isUpdated = get_field_val(a, "isUpdated", 0)
                 if isUpdated == '1':
-                    print("Mark:" + get_field_val(a, "markVal", 0))
-                    print("Class:" + self.get_class_by_id(get_field_val(a, "unitId", 0)))
-                    print("Name: " + get_field_val(a, "lptName", 0))
-                    print("Weight: " + get_field_val(a, "mktWt", 0))
-                    print("Date: " + str(d))
-                    print("_________________________________")
+                    s1 = ("Mark:" + get_field_val(a, "markVal", 0)) + "\n" +\
+                         ("Class:" + self.get_class_by_id(get_field_val(a, "unitId", 0)))+ "\n" +\
+                         ("Name: " + get_field_val(a, "lptName", 0))+ "\n" +\
+                         ("Weight: " + get_field_val(a, "mktWt", 0))+ "\n" +\
+                         ("Date: " + str(d))+ "\n" +\
+                         ("_________________________________")
+                    list.append(s1)
+        return list
 
-        
-        
 
 
+"""
+a = EschoolConnectionHandler()
+
+log = input("Log: ")
+pas = input("Pas: ")
+a.login(log, pas)
+
+print(a.get_user_id())
+
+#print(a.get_avg_mark())
+print(a.get_user_grade())
+print()
+#a.get_new_marks()
+
+DBInstance.init()
+
+DBInstance.push("qwerty", log, a.hash_pas, a.get_user_id())
+
+a = DBInstance.get("qwerty")
+
+DBInstance.update("qwerty", "kek")
+
+b = DBInstance.get("qwerty")
+
+DBInstance.delete("qwerty")
+
+c = DBInstance.get("qwerty")
+
+DBInstance.close()
+"""
