@@ -28,6 +28,7 @@ class Bot:
         self.echocmd = []  #dict!!
         self.numberofUsers = 0
         self.dictofUsers = {}
+        self.currentPeriod = '1 полугодие'
 
     def new_user(self, chat_id):
         self.dictofUsers.update({chat_id:User(chat_id)})
@@ -46,12 +47,25 @@ class User:
         self.currentPeriod = None
         self.currentSubject = None
 
-        #self.currentClass = 0
 
-    def login(self, login, pas):
+    def login(self, login, pas, ishash_pas=False):
         self.sLogin = login
         self.sPassword = pas
-        return self.ES.login(login, pas)
+        a = self.ES.login(login, pas, ishash_pas=ishash_pas)
+        if a == 0:
+            self.sLogin = login
+            self.sPassword = pas
+            a = 1
+            self.Class = self.ES.get_user_grade()
+            if self.Class == "11 кл" or self.Class == "10 кл":
+                self.currentPeriod = "1 полугодие"
+            elif self.Class == "5-9 кл":
+                self.currentPeriod = "1 четверть"
+
+        else:
+            a = 0
+        return a
+
 
 
     def push_is_Log(self):

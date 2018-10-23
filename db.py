@@ -1,9 +1,6 @@
 from peewee import *
 
-
 db = SqliteDatabase('people.db')
-
-
 
 class Person(Model):
     chatId = CharField()
@@ -47,7 +44,7 @@ class DBInstance:
     def get(chatid):
         query = Person.select().where(Person.chatId == chatid)
         if query.exists():
-            return Person.get(Person.chatId == chatid)
+             return Person.get(Person.chatId == chatid)
         else:
             return "User doesn't exist"
 
